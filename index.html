@@ -662,19 +662,19 @@
     <div class="kpi-row" id="kpiRow"></div>
   </div>
 
+  <!-- Most popular QF teams bar -->
+  <div class="section">
+    <div class="section-title">Топ команд 1/4 финала</div>
+    <div style="margin-bottom:12px" id="qfCard"></div>
+    <div class="table-wrap" style="padding:1rem 1.25rem">
+      <div class="bar-list" id="qfBars"></div>
+    </div>
+  </div>
+
   <!-- Champion & Finalists -->
   <div class="section">
     <div class="section-title">Финальные места</div>
     <div class="finalist-grid" id="finalistGrid"></div>
-    <div style="margin-top:12px" id="qfCard"></div>
-  </div>
-
-  <!-- Most popular QF teams bar -->
-  <div class="section">
-    <div class="section-title">Топ команд 1/4 финала</div>
-    <div class="table-wrap" style="padding:1rem 1.25rem">
-      <div class="bar-list" id="qfBars"></div>
-    </div>
   </div>
 
   <!-- Most popular champions bar -->
@@ -848,8 +848,8 @@ function render({ headers, rows }) {
     </div>`;
   }).join('');
 
-  // QF card
-  const qfVotes = countMultiCols(rows, [QF_COL], true).slice(0, 5);
+  // QF card (top 8 teams)
+  const qfVotes = countMultiCols(rows, [QF_COL], true).slice(0, 8);
   const qfTotal = rows.filter(r => (r[QF_COL]||'').trim()).length;
   document.getElementById('qfCard').innerHTML = `
     <div class="finalist-card qf" style="grid-column:1/-1">
@@ -985,13 +985,6 @@ function renderRating(rows) {
       </div>`;
     }).join('');
 
-    // QF teams
-    const qfTeams = (row[QF_COL] || '').split(',').map(s => s.trim()).filter(Boolean);
-    const qfHtml = `<div class="final-block" style="grid-column:1/-1">
-      <div class="final-block-header" style="background:rgba(167,139,250,0.15);color:#a78bfa">⚽ 1/4 финала</div>
-      <div class="final-block-team" style="font-size:0.72rem;white-space:normal;line-height:1.6">${qfTeams.length ? qfTeams.join(' · ') : '—'}</div>
-    </div>`;
-    
     // Finals
     const finalsHtml = finalDefs.map(f => {
       const team = (row[FINAL_COLS[f.key]] || '').trim();
@@ -1000,6 +993,13 @@ function renderRating(rows) {
         <div class="final-block-team">${team || '—'}</div>
       </div>`;
     }).join('');
+
+    // QF teams
+    const qfTeams = (row[QF_COL] || '').split(',').map(s => s.trim()).filter(Boolean);
+    const qfHtml = `<div class="final-block" style="grid-column:1/-1">
+      <div class="final-block-header" style="background:rgba(167,139,250,0.15);color:#a78bfa">⚽ 1/4 финала</div>
+      <div class="final-block-team" style="font-size:0.72rem;white-space:normal;line-height:1.6">${qfTeams.length ? qfTeams.join(' · ') : '—'}</div>
+    </div>`;
 
     return `<div class="rating-card">
       <div class="rating-card-header">
