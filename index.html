@@ -623,6 +623,68 @@
   }
   .standings-load-row input:focus { border-color: var(--accent); }
   .standings-err { font-size: 0.78rem; color: #fca5a5; margin-top: 6px; display: none; }
+
+  /* ── Rating filter ── */
+  .rating-filter {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .rating-search-wrap {
+    position: relative;
+    max-width: 320px;
+  }
+  .rating-search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .rating-search {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 1rem 0.55rem 2.2rem;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .rating-search:focus { border-color: var(--accent); }
+  .rating-search::placeholder { color: var(--muted); }
+  .name-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .name-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.78rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .name-chip:hover { border-color: var(--accent); color: var(--text); }
+  .name-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .rating-card.hidden { display: none; }
+  .rating-no-results {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem;
+    font-size: 0.9rem;
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -635,7 +697,7 @@
 
 <div class="standings-section" id="standingsSection">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-    <div class="section-title" style="margin-bottom:0">Текущее положение</div>
+    <div class="section-title" style="margin-bottom:0">Live! Текущее положение команд</div>
     <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.45rem 1rem" onclick="loadStandings()">↻ Обновить</button>
   </div>
   <div class="standings-grid" id="standingsGrid">
@@ -654,7 +716,20 @@
   <!-- Rating layout -->
   <div class="section">
     <div class="section-title">Прогнозы — рейтинг</div>
+    <div class="rating-filter">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="rating-search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="rating-search" id="ratingSearch" type="text" placeholder="Поиск по имени…" oninput="filterRating()" />
+      </div>
+      <button class="btn btn-ghost" id="resetFilterBtn" onclick="resetFilter()" style="font-size:0.78rem;padding:0.45rem 1rem;display:none">✕ Сбросить</button>
+      </div>
+      <div class="name-chips" id="nameChips"></div>
+    </div>
     <div id="ratingList"></div>
+    <div class="rating-no-results" id="ratingNoResults">Участник не найден</div>
   </div>
 
   <!-- Most popular QF teams bar -->
@@ -977,7 +1052,61 @@ function renderRating(rows) {
   }).join('');
 
   document.getElementById('ratingList').innerHTML = html;
+
+  // Build name chips
+  const names = rows.map(r => (r[2] || '').trim()).filter(Boolean);
+  document.getElementById('nameChips').innerHTML =
+    names.map(name => `<div class="name-chip" onclick="toggleChip(this,'${name.replace(/'/g,"&#39;")}')">${name}</div>`).join('');
+
+  // Reset filter state
+  document.getElementById('ratingSearch').value = '';
+  activeChip = null;
+  filterRating();
 }
+
+let activeChip = null;
+
+window.toggleChip = function(el, name) {
+  const chips = document.querySelectorAll('.name-chip');
+  if (activeChip === name) {
+    activeChip = null;
+    chips.forEach(c => c.classList.remove('active'));
+    document.getElementById('ratingSearch').value = '';
+  } else {
+    activeChip = name;
+    chips.forEach(c => c.classList.toggle('active', c.textContent === name));
+    document.getElementById('ratingSearch').value = name;
+  }
+  filterRating();
+};
+
+window.resetFilter = function() {
+  activeChip = null;
+  document.getElementById('ratingSearch').value = '';
+  document.querySelectorAll('.name-chip').forEach(c => c.classList.remove('active'));
+  filterRating();
+};
+
+window.filterRating = function() {
+  const query = document.getElementById('ratingSearch').value.trim().toLowerCase();
+  const cards = document.querySelectorAll('#ratingList .rating-card');
+  let visible = 0;
+  cards.forEach(card => {
+    const name = card.querySelector('.rating-name')?.textContent?.toLowerCase() || '';
+    const match = !query || name.includes(query);
+    card.classList.toggle('hidden', !match);
+    if (match) visible++;
+  });
+  // Sync chips with typed search (deactivate chip if text was edited manually)
+  if (activeChip && !activeChip.toLowerCase().includes(query) && query !== activeChip.toLowerCase()) {
+    activeChip = null;
+    document.querySelectorAll('.name-chip').forEach(c => c.classList.remove('active'));
+  }
+  const noRes = document.getElementById('ratingNoResults');
+  if (noRes) noRes.style.display = visible === 0 && query ? 'block' : 'none';
+  const resetBtn = document.getElementById('resetFilterBtn');
+  if (resetBtn) resetBtn.style.display = query ? 'inline-block' : 'none';
+};
 
 window.setGroup = function(g) {
   activeGroup = g;
