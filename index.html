@@ -546,7 +546,7 @@
   /* ── Current standings ── */
   .standings-section {
     max-width: 1200px;
-    margin: 0 auto 2rem;
+    margin: 0 auto 0;
     padding: 0 1.5rem;
   }
   .standings-grid {
@@ -733,6 +733,41 @@
   }
   .name-chip:hover { border-color: var(--accent); color: var(--text); }
   .name-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Dropdown chips panel */
+  .chips-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .chips-dropdown.hidden { display: none; }
+  .filter-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  /* Active chips row (selected, shown always) */
+  .active-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+  }
+  .active-chips:empty { display: none; }
   .rating-card.hidden { display: none; }
   .rating-no-results {
     text-align: center;
@@ -773,16 +808,17 @@
   <div class="section">
     <div class="section-title">Прогнозы — рейтинг</div>
     <div class="rating-filter">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="rating-search-wrap">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input class="rating-search" id="ratingSearch" type="text" placeholder="Поиск по имени…" oninput="filterRating()" />
+      <div class="filter-wrap">
+        <div class="rating-search-wrap" style="flex:1;max-width:320px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="rating-search" id="ratingSearch" type="text" placeholder="Поиск или выбор участника…" oninput="filterRating()" onfocus="openChipsDropdown()" autocomplete="off" />
+        </div>
+        <button class="btn btn-ghost" id="resetFilterBtn" onclick="resetFilter()" style="font-size:0.78rem;padding:0.45rem 1rem;display:none">✕ Сбросить</button>
+        <div class="chips-dropdown hidden" id="chipsDropdown"></div>
       </div>
-      <button class="btn btn-ghost" id="resetFilterBtn" onclick="resetFilter()" style="font-size:0.78rem;padding:0.45rem 1rem;display:none">✕ Сбросить</button>
-      </div>
-      <div class="name-chips" id="nameChips"></div>
+      <div class="active-chips" id="activeChipsRow"></div>
     </div>
     <div id="ratingList"></div>
     <div class="rating-no-results" id="ratingNoResults">Участник не найден</div>
@@ -1109,60 +1145,91 @@ function renderRating(rows) {
 
   document.getElementById('ratingList').innerHTML = html;
 
-  // Build name chips
+  // Build dropdown chips
   const names = rows.map(r => (r[2] || '').trim()).filter(Boolean);
-  document.getElementById('nameChips').innerHTML =
-    names.map(name => `<div class="name-chip" onclick="toggleChip(this,'${name.replace(/'/g,"&#39;")}')">${name}</div>`).join('');
+  document.getElementById('chipsDropdown').innerHTML =
+    names.map(name => `<div class="name-chip" data-name="${name.replace(/"/g,'&quot;')}" onclick="toggleChip('${name.replace(/'/g,"&#39;")}')">${name}</div>`).join('');
 
   // Reset filter state
+  activeChips.clear();
   document.getElementById('ratingSearch').value = '';
-  activeChip = null;
+  renderActiveChips();
   filterRating();
 }
 
-let activeChip = null;
+let activeChips = new Set();
 
-window.toggleChip = function(el, name) {
-  const chips = document.querySelectorAll('.name-chip');
-  if (activeChip === name) {
-    activeChip = null;
-    chips.forEach(c => c.classList.remove('active'));
-    document.getElementById('ratingSearch').value = '';
+function renderActiveChips() {
+  const row = document.getElementById('activeChipsRow');
+  row.innerHTML = [...activeChips].map(name =>
+    `<div class="name-chip active" onclick="toggleChip('${name.replace(/'/g,"&#39;")}')">${name} ✕</div>`
+  ).join('');
+  // Sync dropdown chip highlight
+  document.querySelectorAll('#chipsDropdown .name-chip').forEach(c => {
+    c.classList.toggle('active', activeChips.has(c.dataset.name));
+  });
+}
+
+window.openChipsDropdown = function() {
+  const dd = document.getElementById('chipsDropdown');
+  const query = document.getElementById('ratingSearch').value.trim().toLowerCase();
+  // Filter visible chips by current text
+  document.querySelectorAll('#chipsDropdown .name-chip').forEach(c => {
+    c.style.display = !query || c.textContent.toLowerCase().includes(query) ? '' : 'none';
+  });
+  dd.classList.remove('hidden');
+};
+
+window.toggleChip = function(name) {
+  if (activeChips.has(name)) {
+    activeChips.delete(name);
   } else {
-    activeChip = name;
-    chips.forEach(c => c.classList.toggle('active', c.textContent === name));
-    document.getElementById('ratingSearch').value = name;
+    activeChips.add(name);
   }
+  renderActiveChips();
   filterRating();
 };
 
 window.resetFilter = function() {
-  activeChip = null;
+  activeChips.clear();
   document.getElementById('ratingSearch').value = '';
-  document.querySelectorAll('.name-chip').forEach(c => c.classList.remove('active'));
+  renderActiveChips();
+  document.getElementById('chipsDropdown').classList.add('hidden');
   filterRating();
 };
 
 window.filterRating = function() {
   const query = document.getElementById('ratingSearch').value.trim().toLowerCase();
+  // Filter dropdown list by typed text
+  document.querySelectorAll('#chipsDropdown .name-chip').forEach(c => {
+    c.style.display = !query || c.textContent.replace(' ✕','').toLowerCase().includes(query) ? '' : 'none';
+  });
+
   const cards = document.querySelectorAll('#ratingList .rating-card');
   let visible = 0;
   cards.forEach(card => {
-    const name = card.querySelector('.rating-name')?.textContent?.toLowerCase() || '';
-    const match = !query || name.includes(query);
+    const name = (card.querySelector('.rating-name')?.textContent || '').trim();
+    const nameLower = name.toLowerCase();
+    const matchText = !query || nameLower.includes(query);
+    const matchChip = activeChips.size === 0 || activeChips.has(name);
+    const match = matchText && matchChip;
     card.classList.toggle('hidden', !match);
     if (match) visible++;
   });
-  // Sync chips with typed search (deactivate chip if text was edited manually)
-  if (activeChip && !activeChip.toLowerCase().includes(query) && query !== activeChip.toLowerCase()) {
-    activeChip = null;
-    document.querySelectorAll('.name-chip').forEach(c => c.classList.remove('active'));
-  }
+
   const noRes = document.getElementById('ratingNoResults');
-  if (noRes) noRes.style.display = visible === 0 && query ? 'block' : 'none';
+  if (noRes) noRes.style.display = visible === 0 && (query || activeChips.size) ? 'block' : 'none';
   const resetBtn = document.getElementById('resetFilterBtn');
-  if (resetBtn) resetBtn.style.display = query ? 'inline-block' : 'none';
+  if (resetBtn) resetBtn.style.display = (query || activeChips.size) ? 'inline-block' : 'none';
 };
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  const wrap = document.querySelector('.filter-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('chipsDropdown')?.classList.add('hidden');
+  }
+});
 
 window.setGroup = function(g) {
   activeGroup = g;
