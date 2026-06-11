@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ЧМ 2026 — Прогнозы</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: rgba(255,255,255,0.07);
+    --gold: #f5c842;
+    --silver: #b0bec5;
+    --bronze: #cd7f32;
+    --accent: #3b82f6;
+    --text: #e8eaf0;
+    --muted: #6b7694;
+    --green: #22c55e;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0a0e1a 0%, #0f1e3a 50%, #0a1628 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 60% 0%, rgba(59,130,246,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    letter-spacing: 0.05em;
+    background: linear-gradient(90deg, #fff 0%, #f5c842 60%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .hero p { color: var(--muted); font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* LOAD SECTION */
+  .load-section {
+    max-width: 700px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+  }
+  .load-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+  .load-card h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.08em;
+    font-size: 1.2rem;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+  .url-row { display: flex; gap: 8px; }
+  .url-row input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .url-row input:focus { border-color: var(--accent); }
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.97); }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); opacity: 1; }
+  .err {
+    margin-top: 0.75rem;
+    background: rgba(239,68,68,0.12);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.82rem;
+    color: #fca5a5;
+    display: none;
+  }
+  .hint-text {
+    margin-top: 0.75rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* DASHBOARD */
+  #dashboard { display: none; max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+
+  /* KPI row */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    text-align: center;
+  }
+  .kpi-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    color: var(--gold);
+  }
+  .kpi-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+
+  /* Section headings */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--gold);
+    display: inline-block;
+  }
+  .section { margin-bottom: 2.5rem; }
+
+  /* FINALIST CARDS */
+  .finalist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+  .finalist-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .finalist-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .finalist-card.gold::before { background: var(--gold); }
+  .finalist-card.silver::before { background: var(--silver); }
+  .finalist-card.bronze::before { background: var(--bronze); }
+  .finalist-card.fourth::before { background: var(--accent); }
+  .medal-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .gold .medal-label { color: var(--gold); }
+  .silver .medal-label { color: var(--silver); }
+  .bronze .medal-label { color: var(--bronze); }
+  .fourth .medal-label { color: var(--accent); }
+
+  /* Bar chart rows */
+  .bar-list { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 36px;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.82rem;
+  }
+  .bar-label { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track {
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 20px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .bar-count { color: var(--muted); text-align: right; font-size: 0.78rem; }
+
+  /* Group tabs */
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .tab {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.78rem;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .tab.active, .tab:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Group breakdown table */
+  .group-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .group-table th {
+    background: var(--surface2);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 500;
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+  }
+  .group-table th:not(:first-child) { text-align: center; }
+  .group-table td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .group-table td:not(:first-child) { text-align: center; }
+  .group-table tr:last-child td { border-bottom: none; }
+  .group-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .rank-badge {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 22px;
+    text-align: center;
+  }
+  .rank-1 { background: rgba(245,200,66,0.2); color: var(--gold); }
+  .rank-2 { background: rgba(176,190,197,0.2); color: var(--silver); }
+  .rank-3 { background: rgba(205,127,50,0.2); color: var(--bronze); }
+  .rank-4 { background: rgba(59,130,246,0.15); color: var(--accent); }
+
+  /* Participants table */
+  .participants-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .participants-table th {
+    background: var(--surface2);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 500;
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+  }
+  .participants-table td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .participants-table tr:last-child td { border-bottom: none; }
+  .participants-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .tag {
+    display: inline-block;
+    background: rgba(59,130,246,0.15);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 1px 8px;
+    font-size: 0.72rem;
+  }
+  .complete-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+  }
+  .complete-dot.yes { background: var(--green); }
+  .complete-dot.no { background: var(--red); }
+
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    overflow-x: auto;
+  }
+
+  /* Scroll fade in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section { animation: fadeUp 0.4s ease both; }
+  .section:nth-child(2) { animation-delay: 0.05s; }
+  .section:nth-child(3) { animation-delay: 0.1s; }
+  .section:nth-child(4) { animation-delay: 0.15s; }
+  .section:nth-child(5) { animation-delay: 0.2s; }
+  .section:nth-child(6) { animation-delay: 0.25s; }
+
+  .refresh-row { display: flex; justify-content: flex-end; margin-bottom: 1.5rem; }
+
+  /* ── RATING LAYOUT ── */
+  .rating-section { margin-bottom: 2.5rem; }
+
+  .player-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .player-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .player-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  .player-org {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-left: 0.5rem;
+    letter-spacing: 0.04em;
+  }
+  .player-meta { font-size: 0.72rem; color: var(--muted); }
+
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0;
+  }
+  .group-cell {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+  }
+  .group-cell:nth-child(n) { }
+  .group-cell-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .team-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    font-size: 0.78rem;
+  }
+  .place-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .p1 { background: rgba(245,200,66,0.2); color: var(--gold); }
+  .p2 { background: rgba(176,190,197,0.2); color: var(--silver); }
+  .p3 { background: rgba(205,127,50,0.2); color: var(--bronze); }
+  .p4 { background: rgba(59,130,246,0.15); color: var(--accent); }
+
+  .finals-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--border);
+    background: rgba(245,200,66,0.03);
+  }
+  .final-cell {
+    padding: 0.5rem 0.75rem;
+    border-right: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+  .final-cell:last-child { border-right: none; }
+  .final-cell-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .final-team { font-weight: 500; }
+  .final-team.gold-text { color: var(--gold); }
+  .final-team.silver-text { color: var(--silver); }
+  .final-team.bronze-text { color: var(--bronze); }
+  .final-team.accent-text { color: var(--accent); }
+
+  /* ── Rating cards ── */
+  .rating-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .rating-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .rating-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .rating-name { font-weight: 500; font-size: 0.95rem; }
+  .rating-org { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+  .rating-body { padding: 1rem 1.25rem; overflow-x: auto; }
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    min-width: 700px;
+  }
+  .group-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .group-block-header {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    text-align: center;
+  }
+  .group-block-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+  }
+  .group-block-row:last-child { border-bottom: none; }
+  .place-badge {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .pb1 { background: rgba(245,200,66,0.2); color: var(--gold); }
+  .pb2 { background: rgba(176,190,197,0.18); color: var(--silver); }
+  .pb3 { background: rgba(205,127,50,0.18); color: var(--bronze); }
+  .pb4 { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .group-team { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .group-team.empty { color: var(--muted); font-style: italic; }
+  .rating-finals {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+    min-width: 700px;
+  }
+  .final-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .final-block-header {
+    padding: 3px 8px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: center;
+  }
+  .fh-gold   { background: rgba(245,200,66,0.15); color: var(--gold); }
+  .fh-silver { background: rgba(176,190,197,0.15); color: var(--silver); }
+  .fh-bronze { background: rgba(205,127,50,0.15); color: var(--bronze); }
+  .fh-fourth { background: rgba(59,130,246,0.1); color: var(--accent); }
+  .final-block-team {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Current standings ── */
+  .standings-section {
+    max-width: 1200px;
+    margin: 0 auto 2rem;
+    padding: 0 1.5rem;
+  }
+  .standings-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 1000px) { .standings-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 640px)  { .standings-grid { grid-template-columns: repeat(3, 1fr); } }
+  .standings-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .standings-group-header {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    padding: 4px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .standings-group-header span { font-size: 0.6rem; opacity: 0.75; letter-spacing: 0.05em; font-family: 'DM Sans', sans-serif; }
+  .standings-team-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+  }
+  .standings-team-row:last-child { border-bottom: none; }
+  .standings-team-row.top2 { background: rgba(59,130,246,0.06); }
+  .st-name { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .st-games { color: var(--muted); font-size: 0.68rem; min-width: 14px; text-align: center; }
+  .st-pts {
+    min-width: 22px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.75rem;
+    background: var(--surface2);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--text);
+  }
+  .st-pts.has-pts { background: rgba(59,130,246,0.18); color: var(--accent); }
+  .standings-source {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 8px;
+    text-align: right;
+  }
+  .standings-load-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .standings-load-row input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 0.9rem;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+  }
+  .standings-load-row input:focus { border-color: var(--accent); }
+  .standings-err { font-size: 0.78rem; color: #fca5a5; margin-top: 6px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>ЧМ 2026 Прогнозы</h1>
+  <p>Аналитика предсказаний участников</p>
+</div>
+
+
+<div class="standings-section" id="standingsSection">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+    <div class="section-title" style="margin-bottom:0">Текущее положение</div>
+    <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.45rem 1rem" onclick="loadStandings()">↻ Обновить</button>
+  </div>
+  <div class="standings-grid" id="standingsGrid">
+    <!-- populated by JS -->
+  </div>
+  <div class="standings-source" id="standingsSource"></div>
+</div>
+
+
+<div id="dashboard">
+  <div class="refresh-row">
+    <button class="btn btn-ghost" id="refreshBtn">↻ Обновить данные</button>
+  </div>
+
+
+  <!-- Rating layout -->
+  <div class="section">
+    <div class="section-title">Прогнозы — рейтинг</div>
+    <div id="ratingList"></div>
+  </div>
+  
+  <!-- KPIs -->
+  <div class="section">
+    <div class="kpi-row" id="kpiRow"></div>
+  </div>
+
+  <!-- Champion & Finalists -->
+  <div class="section">
+    <div class="section-title">Финальные места</div>
+    <div class="finalist-grid" id="finalistGrid"></div>
+  </div>
+
+  <!-- Most popular champions bar -->
+  <div class="section">
+    <div class="section-title">Самые популярные чемпионы</div>
+    <div class="table-wrap" style="padding:1rem 1.25rem">
+      <div class="bar-list" id="championBars"></div>
+    </div>
+  </div>
+
+  <!-- Group breakdown -->
+  <div class="section">
+    <div class="section-title">Расклад по группам</div>
+    <div class="tabs" id="groupTabs"></div>
+    <div class="table-wrap">
+      <table class="group-table" id="groupTable"></table>
+    </div>
+  </div>
+
+
+  <!-- Participants -->
+  <div class="section">
+    <div class="section-title">Участники</div>
+    <div class="table-wrap">
+      <table class="participants-table" id="participantsTable"></table>
+    </div>
+  </div>
+</div>
+
+
+<div class="load-section">
+    <div class="url-row">
+      <span type="text" id="urlInput" placeholder="URL Google Sheet (pubhtml или обычная ссылка)" value="https://docs.google.com/spreadsheets/d/10hxq04sOJ9eAlceWgHpxxwiPjbiDL06WxMj6sWSkE0E/edit?resourcekey=&gid=1416062210#gid=1416062210" />
+      <span id="loadBtn"></span>
+    </div>
+    <div id="errBox" class="err"></div>
+</div>
+
+
+<script>
+// ── Column index map (0-based) ──────────────────────────────────────────────
+// 0: Timestamp, 1: Email, 2: Name, 3: Org
+// Groups A-L: 4 cols each starting at col 4  (A=4-7, B=8-11, … L=48-51)
+// Finals: 52=4th, 53=Bronze, 54=Silver, 55=Champion
+
+const GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+const GROUP_START = 4;
+
+function groupCols(g) {
+  const i = GROUPS.indexOf(g);
+  const s = GROUP_START + i * 4;
+  return [s, s+1, s+2, s+3]; // 1st, 2nd, 3rd, 4th
+}
+
+const FINAL_COLS = { fourth: 52, bronze: 53, silver: 54, champion: 55 };
+
+// ── URL → GViz JSON ──────────────────────────────────────────────────────────
+function toGvizUrl(raw) {
+  raw = raw.trim();
+  const em = raw.match(/\/spreadsheets\/d\/e\/([^\/\?]+)/);
+  const dm = raw.match(/\/spreadsheets\/d\/([^\/\?]+)/);
+  const gidM = raw.match(/[?&]gid=(\d+)/);
+  const gid = gidM ? gidM[1] : '0';
+  if (em) return `https://docs.google.com/spreadsheets/d/e/${em[1]}/gviz/tq?tqx=out:json&gid=${gid}`;
+  if (dm) return `https://docs.google.com/spreadsheets/d/${dm[1]}/gviz/tq?tqx=out:json&gid=${gid}`;
+  return null;
+}
+
+function cellVal(c) {
+  if (!c || c.v === null || c.v === undefined) return '';
+  return c.f || String(c.v);
+}
+
+async function fetchData(gvizUrl) {
+  // Try direct first, fall back to CORS proxy
+  let txt;
+  try {
+    const res = await fetch(gvizUrl, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    txt = await res.text();
+  } catch (_) {
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(gvizUrl)}`;
+    const res2 = await fetch(proxy);
+    if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+    const json2 = await res2.json();
+    txt = json2.contents;
+  }
+  const jsonStr = txt.replace(/^[^\{]*(\{.*\})[^\}]*$/s, '$1');
+  const data = JSON.parse(jsonStr);
+  if (data.status === 'error') throw new Error(data.errors?.[0]?.detailed_message || 'Ошибка API');
+  const table = data.table;
+  const headers = table.cols.map(c => c.label || c.id || '');
+  const rows = table.rows
+    .map(r => headers.map((_, i) => cellVal(r.c?.[i])))
+    .filter(r => r.some(c => c !== ''));
+  return { headers, rows };
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function countVotes(rows, colIdx) {
+  const map = {};
+  rows.forEach(r => {
+    const v = (r[colIdx] || '').trim();
+    if (v) map[v] = (map[v] || 0) + 1;
+  });
+  return Object.entries(map).sort((a, b) => b[1] - a[1]);
+}
+
+function countMultiCols(rows, colIdxs) {
+  const map = {};
+  rows.forEach(r => {
+    colIdxs.forEach(i => {
+      const v = (r[i] || '').trim();
+      if (v) map[v] = (map[v] || 0) + 1;
+    });
+  });
+  return Object.entries(map).sort((a, b) => b[1] - a[1]);
+}
+
+function isComplete(row) {
+  return GROUPS.every(g => groupCols(g).every(i => (row[i] || '').trim() !== ''))
+    && Object.values(FINAL_COLS).every(i => (row[i] || '').trim() !== '');
+}
+
+function pct(n, total) { return total ? Math.round(n / total * 100) : 0; }
+
+// ── Render ───────────────────────────────────────────────────────────────────
+let currentData = null;
+let activeGroup = 'A';
+
+function render({ headers, rows }) {
+  currentData = { headers, rows };
+  const n = rows.length;
+
+  // KPIs
+  const complete = rows.filter(isComplete).length;
+  const orgs = new Set(rows.map(r => (r[3] || '').trim()).filter(Boolean)).size;
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><div class="kpi-val">${n}</div><div class="kpi-label">Участников</div></div>
+    <div class="kpi"><div class="kpi-val">${complete}</div><div class="kpi-label">Полных анкет</div></div>
+    <div class="kpi"><div class="kpi-val">${n - complete}</div><div class="kpi-label">Незавершённых</div></div>
+    <div class="kpi"><div class="kpi-val">${GROUPS.length}</div><div class="kpi-label">Групп</div></div>
+    <div class="kpi"><div class="kpi-val">${orgs}</div><div class="kpi-label">Организаций</div></div>
+  `;
+
+  // Finalist cards
+  const placements = [
+    { key: 'champion', label: '🏆 Чемпион мира', cls: 'gold' },
+    { key: 'silver',   label: '🥈 2-е место',    cls: 'silver' },
+    { key: 'bronze',   label: '🥉 3-е место',    cls: 'bronze' },
+    { key: 'fourth',   label: '4-е место',       cls: 'fourth' },
+  ];
+  document.getElementById('finalistGrid').innerHTML = placements.map(p => {
+    const votes = countVotes(rows, FINAL_COLS[p.key]);
+    const top = votes.slice(0, 5);
+    const total = votes.reduce((a, b) => a + b[1], 0);
+    return `<div class="finalist-card ${p.cls}">
+      <div class="medal-label">${p.label}</div>
+      ${top.map(([team, cnt]) => `
+        <div class="bar-row" style="grid-template-columns:1fr 60px 30px;margin-bottom:4px">
+          <div class="bar-label" style="font-size:0.78rem">${team}</div>
+          <div class="bar-track" style="height:14px">
+            <div class="bar-fill" style="width:${pct(cnt, total)}%;background:${p.cls==='gold'?'var(--gold)':p.cls==='silver'?'var(--silver)':p.cls==='bronze'?'var(--bronze)':'var(--accent)'}"></div>
+          </div>
+          <div class="bar-count">${cnt}</div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  // Champion bars (top 10)
+  const champVotes = countVotes(rows, FINAL_COLS.champion).slice(0, 10);
+  const maxChamp = champVotes[0]?.[1] || 1;
+  document.getElementById('championBars').innerHTML = champVotes.map(([team, cnt]) => `
+    <div class="bar-row">
+      <div class="bar-label">${team}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct(cnt, maxChamp)}%;background:var(--gold)"></div>
+      </div>
+      <div class="bar-count">${cnt}</div>
+    </div>`).join('');
+
+  // Group tabs
+  document.getElementById('groupTabs').innerHTML = GROUPS.map(g =>
+    `<div class="tab${g === activeGroup ? ' active' : ''}" onclick="setGroup('${g}')">Группа ${g}</div>`
+  ).join('');
+
+  renderGroup(rows);
+
+  // Participants
+  const pTbl = document.getElementById('participantsTable');
+  pTbl.innerHTML = `<thead><tr>
+    <th>#</th><th>Имя</th><th>Организация</th><th>Время</th><th>Полная</th>
+  </tr></thead><tbody>` +
+  rows.map((r, i) => {
+    const comp = isComplete(r);
+    return `<tr>
+      <td style="color:var(--muted)">${i + 1}</td>
+      <td><strong>${r[2] || '—'}</strong></td>
+      <td>${r[3] ? `<span class="tag">${r[3]}</span>` : ''}</td>
+      <td style="color:var(--muted);font-size:0.78rem">${r[0] || ''}</td>
+      <td><span class="complete-dot ${comp ? 'yes' : 'no'}"></span>${comp ? 'Да' : 'Нет'}</td>
+    </tr>`;
+  }).join('') + '</tbody>';
+
+  renderRating(rows);
+  document.getElementById('dashboard').style.display = 'block';
+}
+
+function renderGroup(rows) {
+  const cols = groupCols(activeGroup);
+  // Count by place for each team
+  const teamStats = {};
+  rows.forEach(r => {
+    cols.forEach((col, placeIdx) => {
+      const team = (r[col] || '').trim();
+      if (!team) return;
+      if (!teamStats[team]) teamStats[team] = [0, 0, 0, 0];
+      teamStats[team][placeIdx]++;
+    });
+  });
+
+  // Sort by weighted score (1st=4pts, 2nd=3, 3rd=2, 4th=1)
+  const sorted = Object.entries(teamStats).sort((a, b) => {
+    const score = e => e[1][0]*4 + e[1][1]*3 + e[1][2]*2 + e[1][3]*1;
+    return score(b) - score(a);
+  });
+
+  const n = rows.length || 1;
+  const tbl = document.getElementById('groupTable');
+  tbl.innerHTML = `<thead><tr>
+    <th>Команда</th>
+    <th><span class="rank-badge rank-1">1</span></th>
+    <th><span class="rank-badge rank-2">2</span></th>
+    <th><span class="rank-badge rank-3">3</span></th>
+    <th><span class="rank-badge rank-4">4</span></th>
+  </tr></thead><tbody>` +
+  sorted.map(([team, counts]) => {
+    const score = counts[0]*4 + counts[1]*3 + counts[2]*2 + counts[3]*1;
+    return `<tr>
+      <td><strong>${team}</strong></td>
+      ${counts.map((c, i) => `<td>${c > 0 ? `<span style="color:var(--text)">${c}</span><span style="color:var(--muted);font-size:0.7rem"> (${pct(c, n)}%)</span>` : '<span style="color:var(--muted)">—</span>'}</td>`).join('')}
+    </tr>`;
+  }).join('') + '</tbody>';
+}
+
+
+function renderRating(rows) {
+  const avatarColors = ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#f97316','#ec4899'];
+  const placeBadges = ['pb1','pb2','pb3','pb4'];
+  const finalDefs = [
+    { key: 'champion', label: '🏆 Чемпион', cls: 'fh-gold' },
+    { key: 'silver',   label: '🥈 Серебро',  cls: 'fh-silver' },
+    { key: 'bronze',   label: '🥉 Бронза',   cls: 'fh-bronze' },
+    { key: 'fourth',   label: '4-е место',   cls: 'fh-fourth' },
+  ];
+
+  const html = rows.map((row, idx) => {
+    const name = row[2] || '—';
+    const org  = row[3] || '';
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const color = avatarColors[idx % avatarColors.length];
+
+    // Groups grid
+    const groupsHtml = GROUPS.map(g => {
+      const cols = groupCols(g);
+      const teams = cols.map(i => (row[i] || '').trim());
+      return `<div class="group-block">
+        <div class="group-block-header">Группа ${g}</div>
+        ${teams.map((team, pi) => `
+          <div class="group-block-row">
+            <div class="place-badge ${placeBadges[pi]}">${pi+1}</div>
+            <div class="group-team${team?'':' empty'}">${team || '—'}</div>
+          </div>`).join('')}
+      </div>`;
+    }).join('');
+
+    // Finals
+    const finalsHtml = finalDefs.map(f => {
+      const team = (row[FINAL_COLS[f.key]] || '').trim();
+      return `<div class="final-block">
+        <div class="final-block-header ${f.cls}">${f.label}</div>
+        <div class="final-block-team">${team || '—'}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="rating-card">
+      <div class="rating-card-header">
+        <div class="rating-avatar" style="background:${color}">${initials}</div>
+        <div>
+          <div class="rating-name">${name}</div>
+          ${org ? `<div class="rating-org">${org}</div>` : ''}
+        </div>
+      </div>
+      <div class="rating-body">
+        <div class="groups-grid">${groupsHtml}</div>
+        <div class="rating-finals">${finalsHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('ratingList').innerHTML = html;
+}
+
+window.setGroup = function(g) {
+  activeGroup = g;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.includes(g)));
+  if (currentData) renderGroup(currentData.rows);
+};
+
+// ── Load ─────────────────────────────────────────────────────────────────────
+async function load() {
+  //const raw = document.getElementById('urlInput').value;
+  const raw = 'https://docs.google.com/spreadsheets/d/10hxq04sOJ9eAlceWgHpxxwiPjbiDL06WxMj6sWSkE0E/edit?resourcekey=&gid=1416062210#gid=1416062210';
+  const gviz = toGvizUrl(raw);
+  const errBox = document.getElementById('errBox');
+  //const errBox = '';
+  errBox.style.display = 'none';
+  if (!gviz) { errBox.textContent = 'Не удалось разобрать URL Google Sheets.'; errBox.style.display = 'block'; return; }
+  const btn = document.getElementById('loadBtn');
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    const data = await fetchData(gviz);
+    render(data);
+  } catch (e) {
+    errBox.textContent = 'Ошибка загрузки: ' + e.message + '. Убедитесь, что таблица опубликована.';
+    errBox.style.display = 'block';
+  } finally {
+    btn.textContent = '';
+    btn.disabled = false;
+  }
+}
+load();
+
+//document.getElementById('loadBtn').onclick = load;
+document.getElementById('refreshBtn').onclick = load;
+//document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') load(); });
+
+// ── Standings (current group table) ──────────────────────────────────────────
+const STANDINGS_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+
+function toGvizUrlStandings(raw) {
+  raw = raw.trim();
+  if (raw.includes('/gviz/tq')) return raw;
+  const gidM = raw.match(/[?&]gid=(\d+)/);
+  const gid = gidM ? gidM[1] : '0';
+  const em = raw.match(/\/spreadsheets\/d\/e\/([^\/\?]+)/);
+  if (em) return `https://docs.google.com/spreadsheets/d/e/${em[1]}/gviz/tq?tqx=out:json&gid=${gid}`;
+  const dm = raw.match(/\/spreadsheets\/d\/([^\/\?]+)/);
+  if (dm) return `https://docs.google.com/spreadsheets/d/${dm[1]}/gviz/tq?tqx=out:json&gid=${gid}`;
+  return null;
+}
+
+const STANDINGS_URL = 'https://docs.google.com/spreadsheets/d/1WvUETBlAQ8TccoKZxKpstedx38xqZ8d48vWa7eUEuNQ/edit?gid=134515068#gid=134515068';
+
+async function loadStandings() {
+  const gviz = toGvizUrlStandings(STANDINGS_URL);
+  try {
+    const data = await fetchData(gviz);
+    renderStandings(data.rows);
+  } catch(e) {
+    console.error('Standings error:', e.message);
+  }
+}
+
+function renderStandings(rows) {
+  // Structure: 12 groups × 3 cols each (team, games, points), 4 rows of teams
+  // Col layout: [Team_A, И_A, О_A, Team_B, И_B, О_B, ...]
+  const groups = STANDINGS_GROUPS.map((g, gi) => {
+    const base = gi * 3;
+    const teams = rows.map(row => ({
+      name:  (row[base]   || '').trim(),
+      games: (row[base+1] || '').trim(),
+      pts:   parseInt(row[base+2]) || 0,
+    })).filter(t => t.name);
+    // Sort by points desc
+    teams.sort((a, b) => b.pts - a.pts);
+    return { g, teams };
+  });
+
+  document.getElementById('standingsGrid').innerHTML = groups.map(({ g, teams }) => `
+    <div class="standings-group">
+      <div class="standings-group-header">
+        Группа ${g}
+        <span>И &nbsp;&nbsp; О</span>
+      </div>
+      ${teams.map((t, i) => `
+        <div class="standings-team-row${i < 2 ? ' top2' : ''}">
+          <div class="st-name">${t.name}</div>
+          <div class="st-games">${t.games}</div>
+          <div class="st-pts${t.pts > 0 ? ' has-pts' : ''}">${t.pts}</div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  const now = new Date().toLocaleString('ru-RU');
+  document.getElementById('standingsSource').textContent = `Обновлено: ${now}`;
+}
+
+// Auto-load standings on page open
+window.addEventListener('load', () => loadStandings());
+
+</script>
+</body>
+</html>
