@@ -666,6 +666,15 @@
   <div class="section">
     <div class="section-title">Финальные места</div>
     <div class="finalist-grid" id="finalistGrid"></div>
+    <div style="margin-top:12px" id="qfCard"></div>
+  </div>
+
+  <!-- Most popular QF teams bar -->
+  <div class="section">
+    <div class="section-title">Топ команд 1/4 финала</div>
+    <div class="table-wrap" style="padding:1rem 1.25rem">
+      <div class="bar-list" id="qfBars"></div>
+    </div>
   </div>
 
   <!-- Most popular champions bar -->
@@ -720,7 +729,8 @@ function groupCols(g) {
   return [s, s+1, s+2, s+3]; // 1st, 2nd, 3rd, 4th
 }
 
-const FINAL_COLS = { fourth: 52, bronze: 53, silver: 54, champion: 55 };
+const FINAL_COLS = { bronze: 52, silver: 53, champion: 54, fourth: 55 };
+const QF_COL = 56; // 1/4 финала — comma-separated list
 
 // ── URL → GViz JSON ──────────────────────────────────────────────────────────
 function toGvizUrl(raw) {
@@ -774,12 +784,14 @@ function countVotes(rows, colIdx) {
   return Object.entries(map).sort((a, b) => b[1] - a[1]);
 }
 
-function countMultiCols(rows, colIdxs) {
+function countMultiCols(rows, colIdxs, splitComma) {
   const map = {};
   rows.forEach(r => {
     colIdxs.forEach(i => {
-      const v = (r[i] || '').trim();
-      if (v) map[v] = (map[v] || 0) + 1;
+      const raw = (r[i] || '').trim();
+      if (!raw) return;
+      const vals = splitComma ? raw.split(',').map(s => s.trim()).filter(Boolean) : [raw];
+      vals.forEach(v => { map[v] = (map[v] || 0) + 1; });
     });
   });
   return Object.entries(map).sort((a, b) => b[1] - a[1]);
@@ -787,7 +799,8 @@ function countMultiCols(rows, colIdxs) {
 
 function isComplete(row) {
   return GROUPS.every(g => groupCols(g).every(i => (row[i] || '').trim() !== ''))
-    && Object.values(FINAL_COLS).every(i => (row[i] || '').trim() !== '');
+    && Object.values(FINAL_COLS).every(i => (row[i] || '').trim() !== '')
+    && (row[QF_COL] || '').trim() !== '';
 }
 
 function pct(n, total) { return total ? Math.round(n / total * 100) : 0; }
@@ -835,6 +848,24 @@ function render({ headers, rows }) {
     </div>`;
   }).join('');
 
+  // QF card
+  const qfVotes = countMultiCols(rows, [QF_COL], true).slice(0, 5);
+  const qfTotal = rows.filter(r => (r[QF_COL]||'').trim()).length;
+  document.getElementById('qfCard').innerHTML = `
+    <div class="finalist-card qf" style="grid-column:1/-1">
+      <div class="medal-label" style="color:#a78bfa">⚽ 1/4 финала — топ команды</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px">
+        ${qfVotes.map(([team, cnt]) => `
+          <div class="bar-row" style="grid-template-columns:1fr 60px 30px">
+            <div class="bar-label" style="font-size:0.78rem">${team}</div>
+            <div class="bar-track" style="height:14px">
+              <div class="bar-fill" style="width:${pct(cnt, qfTotal)}%;background:#a78bfa"></div>
+            </div>
+            <div class="bar-count">${cnt}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
   // Champion bars (top 10)
   const champVotes = countVotes(rows, FINAL_COLS.champion).slice(0, 10);
   const maxChamp = champVotes[0]?.[1] || 1;
@@ -843,6 +874,18 @@ function render({ headers, rows }) {
       <div class="bar-label">${team}</div>
       <div class="bar-track">
         <div class="bar-fill" style="width:${pct(cnt, maxChamp)}%;background:var(--gold)"></div>
+      </div>
+      <div class="bar-count">${cnt}</div>
+    </div>`).join('');
+
+  // QF bars (top 16)
+  const qfAllVotes = countMultiCols(rows, [QF_COL], true).slice(0, 16);
+  const maxQf = qfAllVotes[0]?.[1] || 1;
+  document.getElementById('qfBars').innerHTML = qfAllVotes.map(([team, cnt]) => `
+    <div class="bar-row">
+      <div class="bar-label">${team}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct(cnt, maxQf)}%;background:#a78bfa"></div>
       </div>
       <div class="bar-count">${cnt}</div>
     </div>`).join('');
@@ -942,6 +985,13 @@ function renderRating(rows) {
       </div>`;
     }).join('');
 
+    // QF teams
+    const qfTeams = (row[QF_COL] || '').split(',').map(s => s.trim()).filter(Boolean);
+    const qfHtml = `<div class="final-block" style="grid-column:1/-1">
+      <div class="final-block-header" style="background:rgba(167,139,250,0.15);color:#a78bfa">⚽ 1/4 финала</div>
+      <div class="final-block-team" style="font-size:0.72rem;white-space:normal;line-height:1.6">${qfTeams.length ? qfTeams.join(' · ') : '—'}</div>
+    </div>`;
+    
     // Finals
     const finalsHtml = finalDefs.map(f => {
       const team = (row[FINAL_COLS[f.key]] || '').trim();
@@ -961,7 +1011,7 @@ function renderRating(rows) {
       </div>
       <div class="rating-body">
         <div class="groups-grid">${groupsHtml}</div>
-        <div class="rating-finals">${finalsHtml}</div>
+        <div class="rating-finals">${finalsHtml}${qfHtml}</div>
       </div>
     </div>`;
   }).join('');
