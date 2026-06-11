@@ -867,12 +867,17 @@
 <div class="standings-section" id="standingsSection">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
     <div class="section-title" style="margin-bottom:0">Live! Текущее положение команд</div>
-    <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.45rem 1rem" onclick="loadStandings()">↻ Обновить</button>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-ghost" style="font-size:0.78rem;padding:0.45rem 1rem" onclick="loadStandings()">↻ Обновить</button>
+      <button class="btn btn-ghost" id="standingsToggleBtn" style="font-size:0.78rem;padding:0.45rem 0.75rem" onclick="toggleStandings()">▲</button>
+    </div>
   </div>
-  <div class="standings-grid" id="standingsGrid">
-    <!-- populated by JS -->
+  <div id="standingsCollapsible">
+    <div class="standings-grid" id="standingsGrid">
+      <!-- populated by JS -->
+    </div>
+    <div class="standings-source" id="standingsSource"></div>
   </div>
-  <div class="standings-source" id="standingsSource"></div>
 </div>
 
 
@@ -1525,6 +1530,14 @@ function renderStandings(rows) {
 
 // Auto-load standings on page open
 window.addEventListener('load', () => loadStandings());
+
+window.toggleStandings = function() {
+  const el = document.getElementById('standingsCollapsible');
+  const btn = document.getElementById('standingsToggleBtn');
+  const collapsed = el.style.display === 'none';
+  el.style.display = collapsed ? '' : 'none';
+  btn.textContent = collapsed ? '▲' : '▼';
+};
 
 </script>
 </body>
