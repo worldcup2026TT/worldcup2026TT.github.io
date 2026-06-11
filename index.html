@@ -786,15 +786,16 @@
   .score-badge.s2 { background: rgba(34,197,94,0.25); color: #22c55e; border: 1px solid rgba(34,197,94,0.4); }
   .score-badge.s1 { background: rgba(234,179,8,0.25); color: #eab308; border: 1px solid rgba(234,179,8,0.4); }
   .group-block-bonus {
-    font-size: 0.6rem;
-    color: #eab308;
-    background: rgba(234,179,8,0.15);
-    border: 1px solid rgba(234,179,8,0.3);
-    border-radius: 4px;
-    padding: 1px 5px;
+    font-size: 0.65rem;
+    color: #fde047;
+    background: rgba(234,179,8,0.28);
+    border: 1px solid rgba(234,179,8,0.55);
+    border-radius: 5px;
+    padding: 1px 6px;
     margin-left: auto;
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.4;
   }
   .group-block-header-inner {
     display: flex;
@@ -802,12 +803,31 @@
     justify-content: space-between;
   }
   .participant-total-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    background: rgba(245,200,66,0.12);
+    border: 1px solid rgba(245,200,66,0.35);
+    border-radius: 10px;
+    padding: 0.3rem 0.75rem;
+    min-width: 56px;
+    flex-shrink: 0;
+  }
+  .participant-total-score .pts-num {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     letter-spacing: 0.06em;
     color: var(--gold);
-    margin-left: auto;
-    padding-right: 0.25rem;
+    line-height: 1;
+  }
+  .participant-total-score .pts-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    color: rgba(245,200,66,0.55);
+    text-transform: uppercase;
+    margin-top: 2px;
   }
   .participant-rank {
     display: inline-flex;
@@ -862,7 +882,7 @@
 
   <!-- Rating layout -->
   <div class="section">
-    <div class="section-title">Прогнозы — рейтинг</div>
+    <div class="section-title">Прогнозы — LIVE рейтинг</div>
     <div class="rating-filter">
       <div class="filter-wrap">
         <div class="rating-search-wrap" style="flex:1;max-width:320px">
@@ -1218,7 +1238,7 @@ function renderRating(rows) {
       const { teamScores, groupBonus } = groupResults[g] || { teamScores: teams.map((t,i)=>({team:t,predPos:i+1,benchPos:null,pts:0})), groupBonus: 0 };
 
       const bonusHtml = groupBonus > 0
-        ? `<span class="group-block-bonus">+1 группа</span>`
+        ? `<span class="group-block-bonus">+1</span>`
         : '';
 
       return `<div class="group-block">
@@ -1270,7 +1290,7 @@ function renderRating(rows) {
 
   document.getElementById('ratingList').innerHTML = html.map(({ name, org, initials, color, rawScore, groupsHtml, finalsHtml, qfHtml }, rankIdx) => {
     const scoreDisplay = hasStandings
-      ? `<div class="participant-total-score">${rawScore} pts.</div>`
+      ? `<div class="participant-total-score"><span class="pts-num">${rawScore}</span><span class="pts-label">PTS</span></div>`
       : '';
     const rankDisplay = hasStandings
       ? `<div class="participant-rank ${rankClass(rankIdx)}">${rankIdx + 1}</div>`
