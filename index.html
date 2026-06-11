@@ -769,6 +769,64 @@
   }
   .active-chips:empty { display: none; }
   .rating-card.hidden { display: none; }
+
+  /* ── Score badges ── */
+  .score-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    font-size: 0.6rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-left: 4px;
+    line-height: 1;
+  }
+  .score-badge.s2 { background: rgba(34,197,94,0.25); color: #22c55e; border: 1px solid rgba(34,197,94,0.4); }
+  .score-badge.s1 { background: rgba(234,179,8,0.25); color: #eab308; border: 1px solid rgba(234,179,8,0.4); }
+  .group-block-bonus {
+    font-size: 0.6rem;
+    color: #eab308;
+    background: rgba(234,179,8,0.15);
+    border: 1px solid rgba(234,179,8,0.3);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: auto;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+  .group-block-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .participant-total-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    margin-left: auto;
+    padding-right: 0.25rem;
+  }
+  .participant-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    background: var(--surface2);
+    color: var(--muted);
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .participant-rank.rank-top1 { background: rgba(245,200,66,0.2); color: var(--gold); border-color: rgba(245,200,66,0.4); }
+  .participant-rank.rank-top2 { background: rgba(176,190,197,0.2); color: var(--silver); border-color: rgba(176,190,197,0.4); }
+  .participant-rank.rank-top3 { background: rgba(205,127,50,0.2); color: var(--bronze); border-color: rgba(205,127,50,0.4); }
+
   .rating-no-results {
     text-align: center;
     color: var(--muted);
@@ -1080,6 +1138,60 @@ function renderGroup(rows) {
 }
 
 
+// ── Scoring helpers ───────────────────────────────────────────────────────────
+// Returns { teamScores: [{team, predPos, benchPos, pts}], groupBonus: 0|1, groupTotal: number }
+function scoreGroup(predTeams, benchmarkTeams) {
+  // predTeams: array of 4 team names in predicted order (pos 1..4)
+  // benchmarkTeams: array of {name, pos} sorted by pos
+
+  if (!benchmarkTeams || benchmarkTeams.length === 0) {
+    return { teamScores: predTeams.map((t, i) => ({ team: t, predPos: i+1, benchPos: null, pts: 0 })), groupBonus: 0, groupTotal: 0 };
+  }
+
+  // Build benchmark lookup: name → pos
+  const benchMap = {};
+  benchmarkTeams.forEach(t => { benchMap[normalizeTeam(t.name)] = t.pos; });
+
+  const teamScores = predTeams.map((rawTeam, i) => {
+    const team = normalizeTeam(rawTeam);
+    const predPos = i + 1;
+    const benchPos = benchMap[team] ?? null;
+
+    let pts = 0;
+    if (benchPos !== null) {
+      if (predPos === benchPos) {
+        pts = 2; // exact match
+      } else if ((predPos === 1 && benchPos === 2) || (predPos === 2 && benchPos === 1)) {
+        pts = 1; // top-2 swap
+      } else if ((predPos === 3 && benchPos === 4) || (predPos === 4 && benchPos === 3)) {
+        pts = 1; // bottom-2 swap
+      }
+    }
+    return { team: rawTeam, predPos, benchPos, pts };
+  });
+
+  // Group bonus: all 4 teams scored exactly +2 (perfect group prediction)
+  const allPunched = teamScores.every(t => t.pts === 2);
+  const groupBonus = allPunched ? 1 : 0;
+  const groupTotal = teamScores.reduce((s, t) => s + t.pts, 0) + groupBonus;
+
+  return { teamScores, groupBonus, groupTotal };
+}
+
+function scoreParticipant(row) {
+  let total = 0;
+  const groupResults = {};
+  GROUPS.forEach(g => {
+    const cols = groupCols(g);
+    const predTeams = cols.map(i => (row[i] || '').trim());
+    const benchmark = currentStandings[g] || [];
+    const result = scoreGroup(predTeams, benchmark);
+    groupResults[g] = result;
+    total += result.groupTotal;
+  });
+  return { total, groupResults };
+}
+
 function renderRating(rows) {
   const avatarColors = ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#f97316','#ec4899'];
   const placeBadges = ['pb1','pb2','pb3','pb4'];
@@ -1096,17 +1208,37 @@ function renderRating(rows) {
     const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
     const color = avatarColors[idx % avatarColors.length];
 
-    // Groups grid
+    // Compute scores
+    const { total: rawScore, groupResults } = scoreParticipant(row);
+
+    // Groups grid with score badges
     const groupsHtml = GROUPS.map(g => {
       const cols = groupCols(g);
       const teams = cols.map(i => (row[i] || '').trim());
+      const { teamScores, groupBonus } = groupResults[g] || { teamScores: teams.map((t,i)=>({team:t,predPos:i+1,benchPos:null,pts:0})), groupBonus: 0 };
+
+      const bonusHtml = groupBonus > 0
+        ? `<span class="group-block-bonus">+1 группа</span>`
+        : '';
+
       return `<div class="group-block">
-        <div class="group-block-header">Группа ${g}</div>
-        ${teams.map((team, pi) => `
-          <div class="group-block-row">
+        <div class="group-block-header">
+          <div class="group-block-header-inner">
+            <span>Группа ${g}</span>${bonusHtml}
+          </div>
+        </div>
+        ${teamScores.map((ts, pi) => {
+          const badgeHtml = ts.pts === 2
+            ? `<span class="score-badge s2">+2</span>`
+            : ts.pts === 1
+              ? `<span class="score-badge s1">+1</span>`
+              : '';
+          return `<div class="group-block-row">
             <div class="place-badge ${placeBadges[pi]}">${pi+1}</div>
-            <div class="group-team${team?'':' empty'}">${team || '—'}</div>
-          </div>`).join('')}
+            <div class="group-team${ts.team?'':' empty'}">${ts.team || '—'}</div>
+            ${badgeHtml}
+          </div>`;
+        }).join('')}
       </div>`;
     }).join('');
 
@@ -1126,13 +1258,33 @@ function renderRating(rows) {
       <div class="final-block-team" style="font-size:0.72rem;white-space:normal;line-height:1.6">${qfTeams.length ? qfTeams.join(' · ') : '—'}</div>
     </div>`;
 
+    return { name, org, initials, color, rawScore, groupsHtml, finalsHtml, qfHtml, idx };
+  });
+
+  // Sort by score descending
+  html.sort((a, b) => b.rawScore - a.rawScore);
+
+  const rankClass = (i) => i === 0 ? 'rank-top1' : i === 1 ? 'rank-top2' : i === 2 ? 'rank-top3' : '';
+
+  const hasStandings = Object.keys(currentStandings).length > 0;
+
+  document.getElementById('ratingList').innerHTML = html.map(({ name, org, initials, color, rawScore, groupsHtml, finalsHtml, qfHtml }, rankIdx) => {
+    const scoreDisplay = hasStandings
+      ? `<div class="participant-total-score">${rawScore} pts.</div>`
+      : '';
+    const rankDisplay = hasStandings
+      ? `<div class="participant-rank ${rankClass(rankIdx)}">${rankIdx + 1}</div>`
+      : '';
+
     return `<div class="rating-card">
       <div class="rating-card-header">
+        ${rankDisplay}
         <div class="rating-avatar" style="background:${color}">${initials}</div>
         <div>
           <div class="rating-name">${name}</div>
           ${org ? `<div class="rating-org">${org}</div>` : ''}
         </div>
+        ${scoreDisplay}
       </div>
       <div class="rating-body">
         <div class="groups-grid">${groupsHtml}</div>
@@ -1141,10 +1293,8 @@ function renderRating(rows) {
     </div>`;
   }).join('');
 
-  document.getElementById('ratingList').innerHTML = html;
-
-  // Build dropdown chips
-  const names = rows.map(r => (r[2] || '').trim()).filter(Boolean);
+  // Build dropdown chips (in score order)
+  const names = html.map(h => h.name).filter(n => n && n !== '—');
   document.getElementById('chipsDropdown').innerHTML =
     names.map(name => `<div class="name-chip" data-name="${name.replace(/"/g,'&quot;')}" onclick="toggleChip('${name.replace(/'/g,"&#39;")}')">${name}</div>`).join('');
 
@@ -1267,6 +1417,17 @@ load();
 // ── Standings (current group table) ──────────────────────────────────────────
 const STANDINGS_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 
+// Globally stored standings: { 'A': [{name, pos}, ...], 'B': [...], ... }
+let currentStandings = {};
+
+// Normalize team names: "Bosnia and Herzegovina" → "Bosnia" etc.
+function normalizeTeam(name) {
+  if (!name) return '';
+  name = name.trim();
+  if (/bosnia/i.test(name)) return 'Bosnia';
+  return name;
+}
+
 function toGvizUrlStandings(raw) {
   raw = raw.trim();
   if (raw.includes('/gviz/tq')) return raw;
@@ -1306,6 +1467,17 @@ function renderStandings(rows) {
     return { g, teams };
   });
 
+  // Store in global for scoring
+  currentStandings = {};
+  groups.forEach(({ g, teams }) => {
+    currentStandings[g] = teams.map((t, i) => ({
+      name: normalizeTeam(t.name),
+      pos: i + 1,
+      games: t.games,
+      pts: t.pts,
+    }));
+  });
+
   document.getElementById('standingsGrid').innerHTML = groups.map(({ g, teams }) => `
     <div class="standings-group">
       <div class="standings-group-header">
@@ -1322,6 +1494,9 @@ function renderStandings(rows) {
 
   const now = new Date().toLocaleString('ru-RU');
   document.getElementById('standingsSource').textContent = `Обновлено: ${now}`;
+
+  // Re-render ratings with new standings if predictions are loaded
+  if (currentData) renderRating(currentData.rows);
 }
 
 // Auto-load standings on page open
