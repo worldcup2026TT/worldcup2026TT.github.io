@@ -624,6 +624,62 @@
   .standings-load-row input:focus { border-color: var(--accent); }
   .standings-err { font-size: 0.78rem; color: #fca5a5; margin-top: 6px; display: none; }
 
+  /* ── Mobile responsive ── */
+  @media (max-width: 480px) {
+    /* Hero */
+    .hero { padding: 2rem 1rem 1.5rem; }
+
+    /* Sections padding */
+    #dashboard { padding: 0 0.75rem 3rem; }
+    .standings-section { padding: 0 0.75rem; }
+
+    /* Standings: 2 columns on narrow phones */
+    .standings-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+    /* Section title smaller */
+    .section-title { font-size: 1.3rem; }
+
+    /* KPI row: 2 cols */
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .kpi-val { font-size: 2rem; }
+
+    /* Finalist grid: 1 col */
+    .finalist-grid { grid-template-columns: 1fr; }
+
+    /* Bar rows: shrink label */
+    .bar-row { grid-template-columns: 110px 1fr 28px; }
+
+    /* Rating card */
+    .rating-card-header { padding: 0.7rem 0.9rem; }
+    .rating-body { padding: 0.75rem 0.9rem; }
+
+    /* Groups grid inside rating card: scroll horizontally, but make it 4 cols */
+    .groups-grid { grid-template-columns: repeat(4, minmax(130px, 1fr)); min-width: 560px; }
+
+    /* Finals inside rating card: 2 cols */
+    .rating-finals { grid-template-columns: repeat(2, 1fr); min-width: 0; }
+
+    /* Filter: stack search full width */
+    .rating-filter > div:first-child { flex-wrap: wrap; }
+    .rating-search-wrap { max-width: 100%; flex: 1; }
+
+    /* Refresh row */
+    .refresh-row { margin-bottom: 1rem; }
+
+    /* Participants table: hide timestamp column */
+    .participants-table td:nth-child(4),
+    .participants-table th:nth-child(4) { display: none; }
+
+    /* Tabs: smaller */
+    .tab { padding: 0.25rem 0.55rem; font-size: 0.72rem; }
+  }
+
+  @media (max-width: 380px) {
+    .standings-grid { grid-template-columns: repeat(2, 1fr); }
+    .groups-grid { grid-template-columns: repeat(3, minmax(130px, 1fr)); }
+    .bar-row { grid-template-columns: 90px 1fr 26px; }
+  }
+
   /* ── Rating filter ── */
   .rating-filter {
     margin-bottom: 1rem;
