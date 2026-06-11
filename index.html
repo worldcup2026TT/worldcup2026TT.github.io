@@ -788,9 +788,9 @@
   .score-badge.s0 { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.35); }
   .group-block-bonus {
     font-size: 0.65rem;
-    color: #fde047;
-    background: rgba(234,179,8,0.28);
-    border: 1px solid rgba(234,179,8,0.55);
+    color: #86efac;
+    background: rgba(34,197,94,0.25);
+    border: 1px solid #86efac;
     border-radius: 5px;
     padding: 1px 6px;
     margin-left: auto;
@@ -846,6 +846,18 @@
   .participant-rank.rank-top1 { background: rgba(245,200,66,0.2); color: var(--gold); border-color: rgba(245,200,66,0.4); }
   .participant-rank.rank-top2 { background: rgba(176,190,197,0.2); color: var(--silver); border-color: rgba(176,190,197,0.4); }
   .participant-rank.rank-top3 { background: rgba(205,127,50,0.2); color: var(--bronze); border-color: rgba(205,127,50,0.4); }
+  .leader-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    background: rgba(245,200,66,0.15);
+    border: 1px solid rgba(245,200,66,0.45);
+    border-radius: 4px;
+    padding: 1px 7px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
 
   .rating-no-results {
     text-align: center;
@@ -1308,7 +1320,7 @@ function renderRating(rows) {
         ${rankDisplay}
         <div class="rating-avatar" style="background:${color}">${initials}</div>
         <div>
-          <div class="rating-name">${name}</div>
+          <div class="rating-name">${name}${rankIdx === 0 && hasStandings ? '<span class="leader-badge">🏆 LEADER!</span>' : ''}</div>
           ${org ? `<div class="rating-org">${org}</div>` : ''}
         </div>
         ${scoreDisplay}
