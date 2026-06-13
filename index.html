@@ -503,10 +503,10 @@
     font-weight: 600;
     flex-shrink: 0;
   }
-  .pb1 { background: rgba(245,200,66,0.2); color: var(--gold); }
-  .pb2 { background: rgba(176,190,197,0.18); color: var(--silver); }
-  .pb3 { background: rgba(205,127,50,0.18); color: var(--bronze); }
-  .pb4 { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .pb1 { background: rgba(255,255,255,0.06); color: var(--muted); }
+  .pb2 { background: rgba(255,255,255,0.06); color: var(--muted); }
+  .pb3 { background: rgba(255,255,255,0.06); color: var(--muted); }
+  .pb4 { background: rgba(255,255,255,0.06); color: var(--muted); }
   .group-team { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .group-team.empty { color: var(--muted); font-style: italic; }
   .rating-finals {
@@ -785,6 +785,7 @@
   }
   .score-badge.s2 { background: rgba(34,197,94,0.25); color: #22c55e; border: 1px solid rgba(34,197,94,0.4); }
   .score-badge.s1 { background: rgba(234,179,8,0.25); color: #eab308; border: 1px solid rgba(234,179,8,0.4); }
+  .score-badge.s05 { background: rgba(249,115,22,0.2); color: #f97316; border: 1px solid rgba(249,115,22,0.4); }
   .score-badge.s0 { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.35); }
   .group-block-bonus {
     font-size: 0.65rem;
@@ -871,7 +872,8 @@
 <body>
 
 <div class="hero">
-  <h1>ЧМ 2026 Прогнозы - Технотон</h1>
+  <h1>ЧМ 2026 Прогнозы</h1>
+  <p>Аналитика предсказаний участников</p>
 </div>
 
 
@@ -891,6 +893,16 @@
   </div>
 </div>
 
+<!-- QF Benchmark block -->
+<div class="standings-section" id="qfBenchmarkSection" style="margin-top:0;border-top:none;padding-top:0.5rem;margin-bottom:1.5rem;display:none">
+  <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
+    <div class="section-title" style="margin-bottom:0">⚽ 1/4 финала</div>
+    <span id="qfBenchmarkCount" style="font-size:0.72rem;color:var(--muted)"></span>
+  </div>
+  <div id="qfBenchmarkTeams" style="display:flex;flex-wrap:wrap;gap:8px;min-height:24px">
+    <span style="color:var(--muted);font-size:0.8rem">Ожидание данных…</span>
+  </div>
+</div>
 
 <div id="dashboard">
  
@@ -1201,6 +1213,8 @@ function scoreGroup(predTeams, benchmarkTeams) {
         pts = 1; // top-2 swap
       } else if ((predPos === 3 && benchPos === 4) || (predPos === 4 && benchPos === 3)) {
         pts = 1; // bottom-2 swap
+      } else if ((predPos === 1 || predPos === 2) && thirdPlaceQualifiers.has(team.toLowerCase())) {
+        pts = 0.5; // predicted top-2 but qualified via 3rd place
       }
     }
     return { team: rawTeam, predPos, benchPos, pts };
@@ -1225,7 +1239,22 @@ function scoreParticipant(row) {
     groupResults[g] = result;
     total += result.groupTotal;
   });
-  return { total, groupResults };
+
+  // QF scoring
+  const qfTeams = (row[QF_COL] || '').split(',').map(s => normalizeTeam(s.trim())).filter(Boolean);
+  const qfResults = [];
+  let qfTotal = 0;
+  if (currentQFBenchmark.length > 0) {
+    const benchSet = new Set(currentQFBenchmark.filter(t => t !== null).map(t => t.toLowerCase()));
+    qfTeams.forEach(team => {
+      const hit = benchSet.has(team.toLowerCase());
+      qfResults.push({ team, pts: hit ? 2 : 0 });
+      if (hit) qfTotal += 2;
+    });
+  }
+  total += qfTotal;
+
+  return { total, groupResults, qfResults, qfTotal };
 }
 
 function renderRating(rows) {
@@ -1245,7 +1274,7 @@ function renderRating(rows) {
     const color = avatarColors[idx % avatarColors.length];
 
     // Compute scores
-    const { total: rawScore, groupResults } = scoreParticipant(row);
+    const { total: rawScore, groupResults, qfResults } = scoreParticipant(row);
 
     // Groups grid with score badges
     const groupsHtml = GROUPS.map(g => {
@@ -1268,8 +1297,8 @@ function renderRating(rows) {
             ? `<span class="score-badge s2">+2</span>`
             : ts.pts === 1
               ? `<span class="score-badge s1">+1</span>`
-              : ts.benchPos !== null
-                ? `<span class="score-badge s0">0</span>`
+              : ts.pts === 0.5
+                ? `<span class="score-badge s05">½</span>`
                 : '';
           return `<div class="group-block-row">
             <div class="place-badge ${placeBadges[pi]}">${pi+1}</div>
@@ -1289,11 +1318,25 @@ function renderRating(rows) {
       </div>`;
     }).join('');
 
-    // QF teams
+    // QF teams with badges
     const qfTeams = (row[QF_COL] || '').split(',').map(s => s.trim()).filter(Boolean);
+    const hasQFBenchmark = currentQFBenchmark.some(t => t !== null);
     const qfHtml = `<div class="final-block" style="grid-column:1/-1">
       <div class="final-block-header" style="background:rgba(167,139,250,0.15);color:#a78bfa">⚽ 1/4 финала</div>
-      <div class="final-block-team" style="font-size:0.72rem;white-space:normal;line-height:1.6">${qfTeams.length ? qfTeams.join(' · ') : '—'}</div>
+      <div class="final-block-team" style="font-size:0.72rem;white-space:normal;line-height:1.8">
+        ${qfTeams.length
+          ? qfTeams.map((team, i) => {
+              const res = qfResults[i];
+              const hit = hasQFBenchmark && res && res.pts === 2;
+              const miss = hasQFBenchmark && res && res.pts === 0;
+              const badge = hit
+                ? `<span class="score-badge s2">+2</span>`
+                : '';
+              const nameStyle = hit ? 'color:#22c55e;font-weight:600' : '';
+              return `<span style="display:inline-flex;align-items:center;gap:2px;margin-right:8px"><span style="${nameStyle}">${team}</span>${badge}</span>`;
+            }).join('')
+          : '—'}
+      </div>
     </div>`;
 
     return { name, org, initials, color, rawScore, groupsHtml, finalsHtml, qfHtml, idx };
@@ -1319,7 +1362,7 @@ function renderRating(rows) {
         ${rankDisplay}
         <div class="rating-avatar" style="background:${color}">${initials}</div>
         <div>
-          <div class="rating-name">${name}${rankIdx === 0 && hasStandings ? '<span class="leader-badge">🏆</span>' : ''}</div>
+          <div class="rating-name">${name}${rankIdx === 0 && hasStandings ? '<span class="leader-badge">LEADER!</span>' : ''}</div>
           ${org ? `<div class="rating-org">${org}</div>` : ''}
         </div>
         ${scoreDisplay}
@@ -1459,6 +1502,10 @@ const STANDINGS_GROUPS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
 
 // Globally stored standings: { 'A': [{name, pos}, ...], 'B': [...], ... }
 let currentStandings = {};
+// QF benchmark: list of team names that actually qualified
+let currentQFBenchmark = [];
+// Teams that qualified via 3rd place (not 1st/2nd)
+let thirdPlaceQualifiers = new Set();
 
 // Normalize team names: "Bosnia and Herzegovina" → "Bosnia" etc.
 function normalizeTeam(name) {
@@ -1481,6 +1528,8 @@ function toGvizUrlStandings(raw) {
 }
 
 const STANDINGS_URL = 'https://docs.google.com/spreadsheets/d/1WvUETBlAQ8TccoKZxKpstedx38xqZ8d48vWa7eUEuNQ/edit?gid=134515068#gid=134515068';
+const QF_BENCHMARK_URL = 'https://docs.google.com/spreadsheets/d/1WvUETBlAQ8TccoKZxKpstedx38xqZ8d48vWa7eUEuNQ/edit?gid=1123167504#gid=1123167504';
+const THIRD_PLACE_URL = 'https://docs.google.com/spreadsheets/d/1WvUETBlAQ8TccoKZxKpstedx38xqZ8d48vWa7eUEuNQ/edit?gid=1761200774#gid=1761200774';
 
 async function loadStandings() {
   const gviz = toGvizUrlStandings(STANDINGS_URL);
@@ -1489,6 +1538,83 @@ async function loadStandings() {
     renderStandings(data.rows);
   } catch(e) {
     console.error('Standings error:', e.message);
+  }
+  loadQFBenchmark();
+  loadThirdPlaceQualifiers();
+}
+
+async function loadThirdPlaceQualifiers() {
+  const gviz = toGvizUrlStandings(THIRD_PLACE_URL);
+  try {
+    const data = await fetchData(gviz);
+    thirdPlaceQualifiers = new Set(
+      data.rows
+        .map(r => normalizeTeam((r[0] || '').trim()).toLowerCase())
+        .filter(t => t && t !== 'n/a')
+    );
+    // Re-render standings to apply orange highlights
+    if (currentData) renderRating(currentData.rows);
+    // Re-render standings grid too
+    if (Object.keys(currentStandings).length > 0) reRenderStandingsGrid();
+  } catch(e) {
+    console.error('Third place qualifiers error:', e.message);
+  }
+}
+
+async function loadQFBenchmark() {
+  const gviz = toGvizUrlStandings(QF_BENCHMARK_URL);
+  try {
+    const data = await fetchData(gviz);
+    const teams = data.rows.slice(0, 8)
+      .map(r => normalizeTeam((r[0] || '').trim()));
+    // Replace n/a or empty with null to mark TBD slots
+    currentQFBenchmark = teams.map(t => (!t || t.toLowerCase() === 'n/a') ? null : t);
+    renderQFBenchmark();
+    if (currentData) renderRating(currentData.rows);
+  } catch(e) {
+    console.error('QF benchmark error:', e.message);
+  }
+}
+
+function reRenderStandingsGrid() {
+  document.getElementById('standingsGrid').innerHTML = STANDINGS_GROUPS.map(g => {
+    const teams = (currentStandings[g] || []);
+    return `<div class="standings-group">
+      <div class="standings-group-header">
+        Группа ${g}
+        <span>И &nbsp;&nbsp; О</span>
+      </div>
+      ${teams.map((t, i) => `
+        <div class="standings-team-row${i < 2 ? ' top2' : ''}">
+          <div class="st-name" style="${thirdPlaceQualifiers.has(t.name.toLowerCase()) ? 'color:#f97316;font-weight:700' : ''}">${t.name}</div>
+          <div class="st-games">${t.games}</div>
+          <div class="st-pts${t.pts > 0 ? ' has-pts' : ''}">${t.pts}</div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function renderQFBenchmark() {
+  const qfEl = document.getElementById('qfBenchmarkTeams');
+  const qfCount = document.getElementById('qfBenchmarkCount');
+  if (currentQFBenchmark.length > 0 && currentQFBenchmark.some(t => t !== null)) {
+    document.getElementById('qfBenchmarkSection').style.display = '';
+    const pairs = [];
+    for (let i = 0; i < 8; i += 2) {
+      pairs.push([currentQFBenchmark[i] ?? null, currentQFBenchmark[i+1] ?? null]);
+    }
+    qfEl.innerHTML = pairs.map((pair, pi) => `
+      <div style="display:flex;align-items:center;gap:6px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:8px;padding:5px 10px">
+        <span style="color:var(--muted);font-size:0.65rem;font-weight:700;letter-spacing:0.08em;white-space:nowrap">П${pi+1}</span>
+        ${pair.map(t => t
+          ? `<span style="color:#c4b5fd;font-size:0.8rem;font-weight:600">${t}</span>`
+          : `<span style="color:var(--muted);font-size:0.78rem;font-style:italic">не определён</span>`
+        ).join('<span style="color:var(--muted);font-size:0.75rem;padding:0 2px">vs</span>')}
+      </div>`).join('');
+    const defined = currentQFBenchmark.filter(t => t !== null).length;
+    qfCount.textContent = `${defined} из 8`;
+  } else {
+    document.getElementById('qfBenchmarkSection').style.display = 'none';
   }
 }
 
@@ -1518,19 +1644,7 @@ function renderStandings(rows) {
     }));
   });
 
-  document.getElementById('standingsGrid').innerHTML = groups.map(({ g, teams }) => `
-    <div class="standings-group">
-      <div class="standings-group-header">
-        Группа ${g}
-        <span>И &nbsp;&nbsp; О</span>
-      </div>
-      ${teams.map((t, i) => `
-        <div class="standings-team-row${i < 2 ? ' top2' : ''}">
-          <div class="st-name">${t.name}</div>
-          <div class="st-games">${t.games}</div>
-          <div class="st-pts${t.pts > 0 ? ' has-pts' : ''}">${t.pts}</div>
-        </div>`).join('')}
-    </div>`).join('');
+  reRenderStandingsGrid();
 
   const now = new Date().toLocaleString('ru-RU');
   document.getElementById('standingsSource').textContent = `Обновлено: ${now}`;
